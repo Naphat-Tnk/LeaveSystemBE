@@ -1,5 +1,4 @@
 package com.example.leavesystem.Entity;
-
 import jakarta.persistence.*;
 import java.util.Date;
 
