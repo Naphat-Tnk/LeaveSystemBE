@@ -1,22 +1,21 @@
 package com.example.leavesystem.Service;
 
-import com.example.leavesystem.Entity.BalancesEntity;
-import com.example.leavesystem.Entity.RequestsEntity;
-import com.example.leavesystem.Entity.StatusEntity;
-import com.example.leavesystem.Entity.TypeEntity;
+import com.example.leavesystem.DTO.BalancesDto;
+import com.example.leavesystem.DTO.RequestsDto;
+import com.example.leavesystem.Entity.*;
 import com.example.leavesystem.Repository.BalancesRepo;
 import com.example.leavesystem.Repository.RequestsRepo;
 import com.example.leavesystem.Repository.TypeRepo;
+import com.example.leavesystem.Repository.UsersRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class LeaveService {
@@ -27,6 +26,32 @@ public class LeaveService {
     private BalancesRepo balancesRepo;
     @Autowired
     private TypeRepo typeRepo;
+    @Autowired
+    private UsersRepo usersRepo;
+
+    public List<RequestsDto> getAllRequestsDto() {
+        return requestRepo.findAll().stream().map(requestsEntity -> {
+            RequestsDto requestsDto = new RequestsDto();
+
+            requestsDto.setLeaveId(requestsEntity.getLeaveId());
+            requestsDto.setStartDate(requestsEntity.getStartDate().toString());
+            requestsDto.setEndDate(requestsEntity.getEndDate().toString());
+            requestsDto.setReason(requestsEntity.getReason());
+            requestsDto.setStatus(requestsEntity.getStatus().name());
+            requestsDto.setUserId(requestsEntity.getUserId());
+
+            TypeEntity type = typeRepo.findById(requestsEntity.getLeaveId()).orElse(null);
+            requestsDto.setLeaveTypeName(type.getName());
+
+            UsersEntity user = usersRepo.findById(requestsEntity.getUserId()).orElse(null);
+            if (user != null) {
+                requestsDto.setUsername(user.getUsername());
+                requestsDto.setEmail(user.getEmail());
+                requestsDto.setDepartment(user.getDepartment());
+            }
+            return requestsDto;
+        }).collect(Collectors.toList());
+    }
 
     //post leave-requests
     public RequestsEntity createRequest(RequestsEntity request) {
@@ -90,10 +115,25 @@ public class LeaveService {
         balancesRepo.save(balances);
     }
 
-
     //get balances
-    public List<BalancesEntity> getBalance() {
-        return balancesRepo.findAll();
+    public List<BalancesDto> getAllBalance() {
+        List<BalancesEntity> balances = balancesRepo.findAll();
+
+        return balances.stream().map(balance ->{
+            BalancesDto balancesDto = new BalancesDto();
+
+            balancesDto.setId(balance.getId());
+            balancesDto.setUserId(balance.getUserId());
+            balancesDto.setLeaveId(balance.getLeaveId());
+            balancesDto.setYear(balance.getYear());
+            balancesDto.setRemainDay(balance.getRemainDay());
+
+            TypeEntity type = typeRepo.findById(balance.getLeaveId()).orElse(null);
+            balancesDto.setTypename(type.getName());
+
+            return balancesDto;
+        }).collect(Collectors.toList());
+
     }
 
 
