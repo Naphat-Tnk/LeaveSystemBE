@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -44,5 +46,14 @@ public class LeaveController {
     @GetMapping("/leave-balances")
     public ResponseEntity<List<BalancesDto>> getBalances() {
         return ResponseEntity.ok(leaveService.getAllBalance());
+    }
+
+    //Excel
+    @GetMapping("/exportExcel")
+    public ResponseEntity <byte[]> exportExcel() throws IOException {
+       byte[] file = leaveService.exportExcel().toByteArray();
+       return ResponseEntity.ok()
+               .header("Content-Disposition", "attachment; filename=leaveSystem.csv")
+               .header("Content-Type", "text/csv; charset=UTF-8").body(file);
     }
 }

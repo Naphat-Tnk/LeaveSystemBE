@@ -10,6 +10,9 @@ import com.example.leavesystem.Repository.UsersRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
@@ -33,12 +36,19 @@ public class LeaveService {
         return requestRepo.findAll().stream().map(requestsEntity -> {
             RequestsDto requestsDto = new RequestsDto();
 
+            requestsDto.setId(requestsEntity.getId());
             requestsDto.setLeaveId(requestsEntity.getLeaveId());
             requestsDto.setStartDate(requestsEntity.getStartDate().toString());
             requestsDto.setEndDate(requestsEntity.getEndDate().toString());
             requestsDto.setReason(requestsEntity.getReason());
             requestsDto.setStatus(requestsEntity.getStatus().name());
             requestsDto.setUserId(requestsEntity.getUserId());
+
+            if (requestsEntity.getStartDate() != null && requestsEntity.getEndDate() != null) {
+                long diff =  requestsEntity.getEndDate().getTime() - requestsEntity.getStartDate().getTime();
+                int days = (int) TimeUnit.MILLISECONDS.toDays(diff);
+                requestsDto.setDays(days);
+            }
 
             TypeEntity type = typeRepo.findById(requestsEntity.getLeaveId()).orElse(null);
             requestsDto.setLeaveTypeName(type.getName());
@@ -53,9 +63,9 @@ public class LeaveService {
         }).collect(Collectors.toList());
     }
 
-    //post leave-requests
+    //post leave-requests ขอลา
     public RequestsEntity createRequest(RequestsEntity request) {
-        request.setUserId(1);
+        request.setUserId(2);
         request.setStatus(StatusEntity.PENDING);
         return requestRepo.save(request);
     }
@@ -95,7 +105,7 @@ public class LeaveService {
         int days = (int) TimeUnit.MILLISECONDS.toDays(endDate.getTime() - startDate.getTime()) + 1;
         String year = String.valueOf(startDate.getYear() + 1900);
 
-        TypeEntity type = typeRepo.findById(req.getLeaveId()).orElse(null)  ;
+        TypeEntity type = typeRepo.findById(req.getLeaveId()).orElse(null);
 
         if (type == null) {
             System.out.println("ไม่พบ balances");
@@ -119,7 +129,7 @@ public class LeaveService {
     public List<BalancesDto> getAllBalance() {
         List<BalancesEntity> balances = balancesRepo.findAll();
 
-        return balances.stream().map(balance ->{
+        return balances.stream().map(balance -> {
             BalancesDto balancesDto = new BalancesDto();
 
             balancesDto.setId(balance.getId());
@@ -136,6 +146,64 @@ public class LeaveService {
 
     }
 
+    //Excel
+    private int getUsedDay(int userId, int leaveId, String year) {
+        TypeEntity type = typeRepo.findById(leaveId).orElse(null);
+        if (type == null) {
+            return 0;
+        }
 
+        BalancesEntity balances = balancesRepo.findByUserIdAndLeaveIdAndYear(userId, leaveId, year);
+        if (balances == null) {
+            return 0;
+        }
 
+        int usedDay = type.getMaxDay() - balances.getRemainDay();
+        return Math.max(usedDay, 0);
+    }
+
+    private int RemainDay(int userId, int leaveId, String year) {
+        TypeEntity type = typeRepo.findById(leaveId).orElse(null);
+        if (type == null) {
+            return 0;
+        }
+
+        BalancesEntity balances = balancesRepo.findByUserIdAndLeaveIdAndYear(userId, leaveId, year);
+        if (balances == null) {
+            return type.getMaxDay();
+        }
+        return balances.getRemainDay();
+    }
+
+    public ByteArrayOutputStream exportExcel() throws IOException {
+        StringBuilder csv = new StringBuilder();
+        final String UTF8 = "\uFEFF";
+        csv.append(UTF8);
+        csv.append("ชื่อ-นามสกุล,แผนก,ลาป่วย(ใช้),ลาป่วย(เหลือ),ลากิจ(ใช้),ลากิจ(เหลือ),ลาพักร้อน(ใช้),ลาพักร้อน(เหลือ),รวม(ใช้),รวม(เหลือ)\n");
+
+        List<UsersEntity> users = usersRepo.findAll();
+        String year = String.valueOf(LocalDate.now().getYear());
+
+        for (UsersEntity user : users) {
+            if("admin".equals(user.getUsername())) continue;
+            int sick = getUsedDay(user.getId(), 2, year);
+            int sickRemain = RemainDay(user.getId(), 2, year);
+
+            int busy = getUsedDay(user.getId(), 3, year);
+            int busyRemain = RemainDay(user.getId(), 3, year);
+
+            int holiday = getUsedDay(user.getId(), 1, year);
+            int holidayRemain = RemainDay(user.getId(), 1, year);
+
+            int totalused = sick + busy + holiday;
+            int totalRemain = sickRemain + busyRemain + holidayRemain;
+
+            csv.append(String.format("%s,%s,%d,%d,%d,%d,%d,%d,%d,%d\n",
+                    user.getUsername(), user.getDepartment(), sick, sickRemain, busy, busyRemain, holiday, holidayRemain, totalused, totalRemain));
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputStream.write(csv.toString().getBytes(StandardCharsets.UTF_8));
+        return outputStream;
+    }
 }

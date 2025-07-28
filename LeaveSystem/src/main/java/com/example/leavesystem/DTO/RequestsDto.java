@@ -2,6 +2,7 @@ package com.example.leavesystem.DTO;
 
 public class RequestsDto {
     private int leaveId;
+    private int Id;
     private String startDate;
     private String endDate;
     private String leaveTypeName;
@@ -13,12 +14,21 @@ public class RequestsDto {
     private String email;
     private String department;
 
+    private int days;
+
     public int getLeaveId() {
         return leaveId;
     }
 
     public void setLeaveId(int leaveId) {
         this.leaveId = leaveId;
+    }
+
+    public int getId() {
+        return Id;
+    }
+    public void setId(int id) {
+        Id = id;
     }
 
     public String getStartDate() {
@@ -91,5 +101,12 @@ public class RequestsDto {
 
     public void setDepartment(String department) {
         this.department = department;
+    }
+
+    public int getDays() {
+        return days;
+    }
+    public void setDays(int days) {
+        this.days = days;
     }
 }
