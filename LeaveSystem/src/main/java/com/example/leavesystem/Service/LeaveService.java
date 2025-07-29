@@ -68,7 +68,7 @@ public class LeaveService {
 
     //post leave-requests ขอลา
     public RequestsEntity createRequest(RequestsEntity request) {
-        request.setUserId(2);
+        request.setUserId(1);
         request.setStatus(StatusEntity.PENDING);
         return requestRepo.save(request);
     }
