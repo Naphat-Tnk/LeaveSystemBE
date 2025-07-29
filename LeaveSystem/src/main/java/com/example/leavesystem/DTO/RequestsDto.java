@@ -8,6 +8,7 @@ public class RequestsDto {
     private String leaveTypeName;
     private String reason;
     private String status;
+    private String comment;
 
     private int userId;
     private String username;
@@ -70,6 +71,10 @@ public class RequestsDto {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public String getComment() { return comment; }
+
+    public void setComment(String comment) { this.comment = comment; }
 
     public int getUserId() {
         return userId;

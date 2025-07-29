@@ -13,6 +13,7 @@ public class RequestsEntity {
     private Date endDate;
     private StatusEntity status;
     private String reason;
+    private String comment;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -81,4 +82,10 @@ public class RequestsEntity {
     public void setReason(String reason) {
         this.reason = reason;
     }
+
+    @Column(name = "explain")
+    public String getComment() {
+        return comment;
+    }
+    public void setComment(String comment) { this.comment = comment; }
 }

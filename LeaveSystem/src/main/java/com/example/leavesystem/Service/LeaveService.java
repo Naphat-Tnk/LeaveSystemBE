@@ -43,13 +43,16 @@ public class LeaveService {
             requestsDto.setReason(requestsEntity.getReason());
             requestsDto.setStatus(requestsEntity.getStatus().name());
             requestsDto.setUserId(requestsEntity.getUserId());
+            requestsDto.setComment(requestsEntity.getComment());
 
+            //คำนวณวันลา
             if (requestsEntity.getStartDate() != null && requestsEntity.getEndDate() != null) {
                 long diff =  requestsEntity.getEndDate().getTime() - requestsEntity.getStartDate().getTime();
                 int days = (int) TimeUnit.MILLISECONDS.toDays(diff);
                 requestsDto.setDays(days);
             }
 
+            //หาชื่อ type ที่เลือกกับข้อมูลคนกรอก
             TypeEntity type = typeRepo.findById(requestsEntity.getLeaveId()).orElse(null);
             requestsDto.setLeaveTypeName(type.getName());
 
@@ -70,26 +73,29 @@ public class LeaveService {
         return requestRepo.save(request);
     }
 
-    //get leave-requests
+    //get leave-requests ดูรายการขอลาทั้งหมด
     public List<RequestsEntity> getRequest() {
         return requestRepo.findAll();
     }
 
+    //เอาไว้แปลง date -> localDate
     private LocalDate toLocalDate(Date date) {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
-    //put leave-requests/{id}
-    public RequestsEntity updateStatus(int id, StatusEntity status) {
+    //put leave-requests/{id} อัปเดทสถานะ
+    public RequestsEntity updateStatus(int id, StatusEntity status, String comment) {
         RequestsEntity req = requestRepo.findById(id).orElse(null);
         if (req == null) {
             System.out.println("ไม่พบรายการลา");
             return null;
         }
         req.setStatus(status);
+        req.setComment(comment);
         RequestsEntity savedReq = requestRepo.save(req);
 //        return requestRepo.save(req);
 
+        //ตั้งเงื่อนไขว่าถ้าอนุมัติถึงจะหักวันลา
         if (status == StatusEntity.APPROVED) {
             handleBalanceIfApproved(savedReq);
         }
@@ -97,6 +103,7 @@ public class LeaveService {
         return savedReq;
     }
 
+    //methon ที่เอาไว้หักวันลาถ้าอนุมัติ
     private void handleBalanceIfApproved(RequestsEntity req) {
         Date startDate = req.getStartDate();
         Date endDate = req.getEndDate();

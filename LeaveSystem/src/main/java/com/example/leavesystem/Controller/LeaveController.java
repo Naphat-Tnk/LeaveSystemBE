@@ -32,6 +32,7 @@ public class LeaveController {
         return leaveService.createRequest(req);
     }
 
+    //เอาค่ามาจาก dto
     @GetMapping("/leave-requests")
     public ResponseEntity<List<RequestsDto>> getRequests() {
         return ResponseEntity.ok(leaveService.getAllRequestsDto());
@@ -40,9 +41,10 @@ public class LeaveController {
 
     @PutMapping("/leave-requests/{id}")
     public RequestsEntity updateRequests(@PathVariable int id, @RequestBody RequestsEntity req) {
-        return leaveService.updateStatus(id, req.getStatus());
+        return leaveService.updateStatus(id, req.getStatus(), req.getComment());
     }
 
+    //เอาค่ามาจาก dto
     @GetMapping("/leave-balances")
     public ResponseEntity<List<BalancesDto>> getBalances() {
         return ResponseEntity.ok(leaveService.getAllBalance());
