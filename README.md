@@ -1,5 +1,5 @@
 ## LeaveSystemBE
-This project involves the development of the back-end system for the organization's leave management platform. The system is responsible for receiving data from the front-end, recording it, and performing updates to the database .
+This project involves the development of the **back-end** system for the organization's leave management platform. The system is responsible for receiving data from the front-end, recording it, and performing updates to the database .
 
 ## Features
 When a leave request is approved, the system calculates the used leave days and subtracts them from the total number of available leave days to determine the remaining amount. This is automatically recorded in the database.
@@ -20,7 +20,7 @@ When a leave request is approved, the system calculates the used leave days and 
 
 ## How to use
 1. Install Project
-2. Create database, table and set value in user, leave_type (databasename = leaveDB) password  in application.properties
+2. Create database, table and set value in user, leave_type (databasename = leaveDB) Configure database connection in application.properties
 ```
 CREATE TABLE users (
     id SERIAL PRIMARY KEY NOT NULL,
